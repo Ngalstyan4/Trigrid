@@ -6,11 +6,11 @@
     int[][] state;
 
     void setup() {
-        //size(400, 400);
-        state = new int[(int) (width / lineWidth)][(int) (height * 2 / lineHeight)];
+        size(400, 400);
+        state = new int[ceil(width / lineWidth+1)][ceil(height * 2 / lineHeight+1)];
         println(width, height, state[0].length, state.length);
 
-        fullScreen();
+        //fullScreen();
         background(255);
         stroke(200);
 
@@ -26,35 +26,60 @@
     }
 
     void draw() {
-        //println(pointInTriangle(1,1, 1, 20, 30,30,2,20));
-    }
+        for (int i = 0; i < width; i += lineWidth) {
+            //line(i, 0, i, height);
+
+            for (float j = i / lineWidth % 2 == 0 ? 0 : side / 2; j < height + lineHeight; j += lineHeight) {
+              Triangle rightTriangle = new Triangle(i, j, i + lineWidth, j - side / 2, i + lineWidth, j + side / 2);
+              Triangle leftTriangle =  new Triangle(i, j, i, j + side, i + lineWidth, j + side / 2);
+              PVector triangleCenter = getTriangleCenter(leftTriangle);
+              int currentState = state[floor(triangleCenter.x/lineWidth)]
+                            [floor(triangleCenter.y/lineHeight)];
+              int triangleColor = (currentState) % colors.length;
+              fill(colors[triangleColor]);
+                triangle(i, j, i + lineWidth, j - side / 2, i + lineWidth, j + side / 2);
+              triangleCenter = getTriangleCenter(rightTriangle);
+              currentState = state[floor(triangleCenter.x/lineWidth)]
+                            [floor(triangleCenter.y/lineHeight)];
+              triangleColor = (currentState) % colors.length;
+              fill(colors[triangleColor]);
+                triangle(i, j, i, j + side, i + lineWidth, j + side / 2);
+            }
+        }          
+        }
 
     void mousePressed() {
         for (int i = 0; i < width; i += lineWidth) {
             // line(i, 0, i, height);
 
             for (float j = i / lineWidth % 2 == 0 ? 0 : side / 2; j < height; j += lineHeight) {
-                if (checkCollision(mouseX, mouseY, new Triangle(i, j, i + lineWidth, j - side / 2, i + lineWidth, j + side / 2))) {
-                    int currentState = state[(int) map(mouseX, 0, width, 0, state.length)]
-                            [(int) map(mouseY, 0, height, 0, state[0].length)]++;
-                    println(currentState);
+              Triangle leftTriangle = new Triangle(i, j, i + lineWidth, j - side / 2, i + lineWidth, j + side / 2);
+              Triangle rightTriangle = new Triangle(i, j, i, j + side, i + lineWidth, j + side / 2);
+
+                if (checkCollision(mouseX, mouseY, leftTriangle)) {
+                   PVector triangleCenter = getTriangleCenter(leftTriangle);
+                    int currentState = state[floor(triangleCenter.x/lineWidth)]
+                            [floor(triangleCenter.y/lineHeight)]++;
+
                     stroke(153);
-                    if (currentState != 0) {
+                    int triangleColor = (currentState) % colors.length;
+                    if (triangleColor != 0) {
                         noStroke();
                     }
-                    fill(colors[(currentState + 1) % colors.length]);
+                    fill(colors[triangleColor]);
                     triangle(i, j, i + lineWidth, j - side / 2, i + lineWidth, j + side / 2);
                     noFill();
 
-                } else if (checkCollision(mouseX, mouseY, new Triangle(i, j, i, j + side, i + lineWidth, j + side / 2))) {
-                    int currentState = state[(int) map(mouseX, 0, width, 0, state.length)]
-                            [(int) map(mouseY, 0, height, 0, state[0].length) + 1]++;
+                } else if (checkCollision(mouseX, mouseY, rightTriangle )) {
+                  PVector triangleCenter = getTriangleCenter(rightTriangle);
+                    int currentState = state[floor(triangleCenter.x/lineWidth)]
+                            [floor(triangleCenter.y/lineHeight) + 1]++;
                     stroke(153);
 
                     if (currentState != 0) {
                         noStroke();
                     }
-                    fill(colors[(currentState + 1) % colors.length]);
+                    fill(colors[(currentState) % colors.length]);
                     triangle(i, j, i, j + side, i + lineWidth, j + side / 2);
                     noFill();
 
@@ -62,15 +87,14 @@
             }
         }
     }
-
-//boolean pointInTriangle(float aX, float aY,
-//                          float bX, float bY, 
-//                            float cX, float cY, 
-//                              float pointX, float pointY) {
-//  float slopeAB = (bY - aY) / (bX - aX);
-//  float slopeBC = (bY - cY) / (bX - cX);
-//  float slopeAC = (aY - cY) / (aX - cX);
-
+    
+    PVector getTriangleCenter(Triangle t) {
+      float centerX = t.point1x + t.point2x + t.point3x;
+      centerX /= 3;
+      float centerY = t.point1y + t.point2y + t.point3y;
+      centerY /= 3;
+      return new PVector(centerX, centerY);
+    }
     boolean checkCollision(float x, float y, Triangle t) {
         float tArea, t1Area, t2Area, t3Area;
         tArea = triangleArea(t.point1x, t.point1y, t.point3x, t.point3y, t.point2x, t.point2y);
@@ -100,13 +124,6 @@
         return (0.5 * abs((a * d) - (b * c)));
     }
 
-    //return signum(slopeAB * (pointX-bX) + bY- pointY) == signum(slopeBC * (pointX-bX) + bY-pointY);
-//}
-//int signum(float f) {
-//  if (f > 0) return 1;
-//  if (f < 0) return -1;
-//  return 0;
-//} 
     class Triangle {
         float point1x;
         float point1y;
