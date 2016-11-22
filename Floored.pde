@@ -1,5 +1,5 @@
 
-    final color[] colors = {color(255, 0, 0), color(0, 255, 0), color(0, 0, 255), color(255)};
+    final color[] colors = {color(255),color(255, 0, 0), color(0, 255, 0), color(0, 0, 255)};
     float lineWidth = 30;
     float lineHeight = (float) (2 * lineWidth / Math.sqrt(3));
     float side = lineHeight;
@@ -63,7 +63,8 @@
                    state.put(triangleCenter,++currentState);
 
 
-                    stroke(153);
+                    stroke(200);
+                    //noStroke();
                     int triangleColor = (currentState) % colors.length;
                     if (triangleColor != 0) {
                         noStroke();
@@ -77,7 +78,8 @@
                   int currentState = state.get(triangleCenter);
                   state.put(triangleCenter,++currentState);
 
-                    stroke(153);
+                    stroke(200);
+                    //noStroke();
 
                     if (currentState != 0) {
                         noStroke();
@@ -100,6 +102,7 @@
     }
     boolean checkCollision(float x, float y, Triangle t) {
         float tArea, t1Area, t2Area, t3Area;
+        float err = 0.01;
         tArea = triangleArea(t.point1x, t.point1y, t.point3x, t.point3y, t.point2x, t.point2y);
         t1Area = triangleArea(x, y, t.point2x, t.point2y, t.point3x, t.point3y);
         t2Area = triangleArea(x, y, t.point3x, t.point3y, t.point1x, t.point1y);
@@ -115,7 +118,8 @@
         //triangle(x,y, t.point2x, t.point2y, t.point1x, t.point1y);
 
         float totalArea = t1Area + t2Area + t3Area;
-        return (totalArea == tArea);
+        if(abs(totalArea- tArea) < err)println(totalArea == tArea);
+        return (abs(totalArea- tArea) < err);
     }
 
     float triangleArea(float p1, float p2, float p3, float p4, float p5, float p6) {

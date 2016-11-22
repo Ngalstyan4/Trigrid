@@ -9,11 +9,12 @@ import java.util.HashMap;
  */
 public class Floored extends PApplet {
 
-    final int[] colors = {color(255), color(255, 0, 0), color(0, 255, 0), color(0, 0, 255)};
-    float lineWidth = 30;
-    float lineHeight = (float) (2 * lineWidth / Math.sqrt(3));
-    float side = lineHeight;
-    HashMap<PVector, Integer> state;
+    private final int[] colors = {color(255), color(217, 0, 0), color(0, 51, 160), color(239, 107, 0)};
+    private float lineWidth = 30;
+    private float lineHeight = (float) (2 * lineWidth / Math.sqrt(3));
+    private float side = lineHeight;
+    private HashMap<PVector, Integer> state;
+    private boolean RIGHT = false, LEFT = true;
 
     public static void main(String... args) {
         PApplet.main("Floored");
@@ -31,13 +32,14 @@ public class Floored extends PApplet {
         stroke(200);
 
         for (int i = 0; i < width; i += lineWidth) {
-            //line(i, 0, i, height);
+            for (float j = i / lineWidth % 2 == 0 ? 0 : side / 2;
+                 j < height + lineHeight;
+                 j += lineHeight) {
 
-            for (float j = i / lineWidth % 2 == 0 ? 0 : side / 2; j < height + lineHeight; j += lineHeight) {
-                triangle(i, j, i + lineWidth, j - side / 2, i + lineWidth, j + side / 2);
-                triangle(i, j, i, j + side, i + lineWidth, j + side / 2);
-                Triangle rightTriangle = new Triangle(i, j, i + lineWidth, j - side / 2, i + lineWidth, j + side / 2);
-                Triangle leftTriangle = new Triangle(i, j, i, j + side, i + lineWidth, j + side / 2);
+                Triangle rightTriangle = createTriangle(i, j, RIGHT);
+                Triangle leftTriangle = createTriangle(i, j, LEFT);
+                rightTriangle.initDrawTriangle();
+                leftTriangle.initDrawTriangle();
                 state.put(rightTriangle.getCenter(), 0);
                 state.put(leftTriangle.getCenter(), 0);
 
@@ -47,35 +49,41 @@ public class Floored extends PApplet {
     }
 
     public void draw() {
-//        for (int i = 0; i < width; i += lineWidth) {
-//            //line(i, 0, i, height);
-//
-//            for (float j = i / lineWidth % 2 == 0 ? 0 : side / 2; j < height + lineHeight; j += lineHeight) {
-//              Triangle  leftTriangle= new Triangle(i, j, i + lineWidth, j - side / 2, i + lineWidth, j + side / 2);
-//              Triangle rightTriangle =  new Triangle(i, j, i, j + side, i + lineWidth, j + side / 2);
-//              PVector triangleCenter = getTriangleCenter(leftTriangle);
-//              int currentState = state.get(triangleCenter);
-//              int triangleColor = (currentState) % colors.length;
-//              fill(colors[triangleColor]);
-//                triangle(i, j, i + lineWidth, j - side / 2, i + lineWidth, j + side / 2);
-//              triangleCenter = getTriangleCenter(rightTriangle);
-//              currentState = state.get(triangleCenter);
-//              triangleColor = (currentState) % colors.length;
-//              fill(colors[triangleColor]);
-//                triangle(i, j, i, j + side, i + lineWidth, j + side / 2);
-//            }
-//        }
+        for (int i = 0; i < width; i += lineWidth) {
+
+            for (float j = i / lineWidth % 2 == 0 ? 0 : side / 2;
+                 j < height + lineHeight;
+                 j += lineHeight) {
+
+                Triangle leftTriangle = createTriangle(i, j, LEFT);
+                Triangle rightTriangle = createTriangle(i, j, RIGHT);
+
+                // left
+                PVector triangleCenter = leftTriangle.getCenter();
+                int currentState = state.get(triangleCenter);
+                int triangleColor = currentState % colors.length;
+                fill(colors[triangleColor]);
+                leftTriangle.drawTriangle(false);
+
+                //right
+                triangleCenter = rightTriangle.getCenter();
+                currentState = state.get(triangleCenter);
+                triangleColor = currentState % colors.length;
+                fill(colors[triangleColor]);
+                rightTriangle.drawTriangle(false);
+            }
+        }
     }
 
     public void mousePressed() {
         for (int i = 0; i < width; i += lineWidth) {
             // I initially thought this might be need but then realised that the
-            // three sides of a tringle suffice to draw every needed line
+            // three sides of a triangle suffice to draw every needed line
             // line(i, 0, i, height);
 
             for (float j = i / lineWidth % 2 == 0 ? 0 : side / 2; j < height; j += lineHeight) {
-                Triangle leftTriangle = new Triangle(i, j, i + lineWidth, j - side / 2, i + lineWidth, j + side / 2);
-                Triangle rightTriangle = new Triangle(i, j, i, j + side, i + lineWidth, j + side / 2);
+                Triangle leftTriangle = createTriangle(i, j, LEFT);
+                Triangle rightTriangle = createTriangle(i, j, RIGHT);
 
                 if (checkCollision(mouseX, mouseY, leftTriangle)) {
                     leftTriangle.drawTriangle();
@@ -87,7 +95,9 @@ public class Floored extends PApplet {
     }
 
 
-    boolean checkCollision(float x, float y, Triangle t) {
+    // HELPER FUNCTIONS //
+
+    private boolean checkCollision(float x, float y, Triangle t) {
         float tArea, t1Area, t2Area, t3Area;
         float err = 0.01f;
         tArea = triangleArea(t.point1x, t.point1y, t.point3x, t.point3y, t.point2x, t.point2y);
@@ -110,7 +120,7 @@ public class Floored extends PApplet {
         return (abs(totalArea - tArea) < err);
     }
 
-    float triangleArea(float p1, float p2, float p3, float p4, float p5, float p6) {
+    private float triangleArea(float p1, float p2, float p3, float p4, float p5, float p6) {
         float a, b, c, d;
         a = p1 - p5;
         b = p2 - p6;
@@ -119,7 +129,17 @@ public class Floored extends PApplet {
         return (0.5f * abs((a * d) - (b * c)));
     }
 
+    private Triangle createTriangle(float i, float j, boolean left) {
+        if (left)
+            return new Triangle(i, j, i, j + side, i + lineWidth, j + side / 2);
+        else
+            return new Triangle(i, j, i + lineWidth, j - side / 2, i + lineWidth, j + side / 2);
+
+    }
+
     private class Triangle {
+        // According to encapsulation rules, these must be private,
+        // but it will not change anything at this point as this is an inner class
         float point1x;
         float point1y;
         float point2x;
@@ -137,6 +157,11 @@ public class Floored extends PApplet {
             this.point3x = point3x;
             this.point3y = point3y;
         }
+        // not allowed this way!
+//        Triangle(float i, float j, boolean left) {
+//            if (left) this(i, j, i + lineWidth, j - side / 2, i + lineWidth, j + side / 2);
+//        }
+
         PVector getCenter() {
             float centerX = this.point1x + this.point2x + this.point3x;
             centerX /= 3;
@@ -145,10 +170,21 @@ public class Floored extends PApplet {
             return new PVector(centerX, centerY);
         }
 
+        void initDrawTriangle() {
+            triangle(point1x, point1y, point2x, point2y, point3x, point3y);
+
+        }
+
         void drawTriangle() {
+        drawTriangle(true);
+        }
+
+        void drawTriangle(boolean modifyState) {
             PVector triangleCenter = this.getCenter();
             int currentState = state.get(triangleCenter);
-            state.put(triangleCenter, ++currentState);
+            if (modifyState) {
+                state.put(triangleCenter, ++currentState);
+            }
 
             stroke(200);
             int triangleColor = (currentState) % colors.length;
@@ -159,5 +195,6 @@ public class Floored extends PApplet {
             triangle(point1x, point1y, point2x, point2y, point3x, point3y);
             noFill();
         }
+
     }
 }
