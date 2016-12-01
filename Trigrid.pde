@@ -7,7 +7,7 @@ import java.util.HashMap;
 /**
  * Created by ngalstyan on 11/22/16.
  */
-public class Floored extends PApplet {
+public class Trigrid extends PApplet {
     /*
      * list of colors to iterate through
      * The first must be the ground state color
@@ -18,16 +18,11 @@ public class Floored extends PApplet {
     private float lineHeight = (float) (2 * lineWidth / Math.sqrt(3));
     private float side = lineHeight;
     private HashMap<PVector, Integer> state;
+           Triangle prevTriangle = null;
+
 
     // some dummy-constants to avoid confusion in naming
     private boolean RIGHT = false, LEFT = true;
-
-    /**
-     * Running Processing sketch
-     */
-    public static void main(String... args) {
-        PApplet.main("Floored");
-    }
 
     /**
      * setting up the stage
@@ -89,7 +84,34 @@ public class Floored extends PApplet {
         }
     }
 
-    /**
+     /**
+     * Processing moseDragged event;
+     * checking whether the given triangle is dragged
+     */
+     public void mouseDragged() {
+               for (int i = 0; i < width; i += lineWidth) {
+
+            for (float j = i / lineWidth % 2 == 0 ? 0 : side / 2;
+                 j < height;
+                 j += lineHeight) {
+                Triangle leftTriangle = createTriangle(i, j, LEFT);
+                Triangle rightTriangle = createTriangle(i, j, RIGHT);
+
+                if (leftTriangle.checkCollision(mouseX, mouseY)) {
+                    if(!leftTriangle.equals(prevTriangle)) {
+                      prevTriangle = leftTriangle;
+                      mousePressed();
+                    }
+                } else if (rightTriangle.checkCollision(mouseX, mouseY)) {
+                    if(!rightTriangle.equals(prevTriangle)) {
+                      prevTriangle = rightTriangle;
+                      mousePressed();
+                    }
+                  }
+            }
+        }
+     }
+     /**
      * Processing mosePressed event;
      * checking whether the given triangle is clicked
      * I could keep all center coordinates and this code would change into simply
@@ -284,8 +306,22 @@ public class Floored extends PApplet {
 //        triangle(x,y, t.point2x, t.point2y, t.point1x, t.point1y);
 
             float totalArea = t1Area + t2Area + t3Area;
-            if (abs(totalArea - tArea) < err) println(totalArea == tArea);
             return (abs(totalArea - tArea) < err);
+        }
+        
+                @Override
+        public boolean equals(Object other){
+            if(other == null) return false;
+            if(this.getClass() != other.getClass()) return false;
+
+            //safely
+            Triangle o = (Triangle) other;
+            if(this.point1x != o.point1x) return false;
+            if(this.point1y != o.point1y) return false;
+            if(this.point2x != o.point2x) return false;
+            if(this.point2y != o.point2y) return false;
+            if(this.point3x != o.point3x) return false;
+            return this.point3y == o.point3y;
         }
 
     }
